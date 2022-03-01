@@ -65,7 +65,8 @@ stochOverSold = 0.2
 willOverSold = -85
 willOverBought = -10
 TpPct = 0.1
-messages = ""
+messagesSell = ""
+messagesBuy = ""
 
 dfList = {}
 for pair in pairList:
@@ -168,10 +169,10 @@ for coin in coinPositionList:
             profit = ((buyPrice - Price)/Price) * 100
 
             if profit > 0:
-                messages = "Sell " + str(coin) + "at " + str(buyPrice) + "$. " + " --> " + " +" + str(profit) + "%"
+                messagesSell = "Sell " + str(coin) + "at " + str(buyPrice) + "$. " + " --> " + " +" + str(profit) + "%"
 
             else :
-                messages = "Sell " + str(coin) + "at " + str(buyPrice) + "$. " + " --> " + str(profit) + "%"
+                messagesSell = "Sell " + str(coin) + "at " + str(buyPrice) + "$. " + " --> " + str(profit) + "%"
         else:
             print("Keep",coin)
 
@@ -205,33 +206,39 @@ if openPositions < maxOpenPosition:
                     time.sleep(2)
                     tp = ftx.place_limit_order(symbol,'sell',buyAmount,tpPrice)
                     pass
-
+                
                 f = open("a", "wb")
                 Price = buyPrice
                 dump (Price, f)
                 f.close()
 
-                messages = "Buy " + str(coin) + "at " + str(buyPrice) + "$"
+                messagesBuy = "Buy " + str(coin) + "at " + str(buyPrice) + "$"
 
                 print("Buy",buyAmount,coin,'at',buyPrice,buy)
                 print("Place",buyAmount,coin,"TP at",tpPrice, tp)
 
                 openPositions += 1
 
-if messages != "":
+if messagesSell != "" or messagesBuy != "":
     TOKEN = ""
     client = discord.Client()
     @client.event
     async def on_ready():
         print(f'{client.user} has connected to Discord!')
 
-        channel = client.get_channel()
-        await channel.send(messages)
+        if messagesSell != "":
+            channel = client.get_channel()
+            await channel.send(messagesSell)
+
+        if messagesBuy != "":
+            channel = client.get_channel()
+            await channel.send(messagesBuy)
 
         await client.close()
         time.sleep(1)
 
 
     client.run(TOKEN)
+
 else:
     print("No messages to send")
