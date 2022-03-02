@@ -86,8 +86,8 @@ for coin in dfList:
     dfList[coin]['AO']= ta.momentum.awesome_oscillator(dfList[coin]['high'],dfList[coin]['low'],window1=aoParam1,window2=aoParam2)
     dfList[coin]['STOCH_RSI'] = ta.momentum.stochrsi(close=dfList[coin]['close'], window=stochWindow)
     dfList[coin]['WillR'] = ta.momentum.williams_r(high=dfList[coin]['high'], low=dfList[coin]['low'], close=dfList[coin]['close'], lbp=willWindow)
-    dfList[coin]['EMA100'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=100)
-    dfList[coin]['EMA200'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=200)
+    dfList[coin]['EMA25'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=25)
+    dfList[coin]['EMA75'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=75)
 
     trix = ci.trix(close=dfList[coin]['close'],trixLength=trixWindow, trixSignal=trixSignal)
     dfList[coin]['TRIX_HISTO'] = trix.trix_histo()
@@ -114,7 +114,7 @@ def buyConditionTrix(row, previousRow):
     if(
         row['TRIX_HISTO'] > 0
         and row['STOCH_RSI'] < stochOverBought
-        and row['EMA100'] > row['EMA200']
+        and row['EMA25'] > row['EMA75']
         and row['MACD'] > 0
     ):
         return True
