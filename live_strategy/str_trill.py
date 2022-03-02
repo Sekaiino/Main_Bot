@@ -8,6 +8,8 @@ import ccxt
 from datetime import datetime
 import time
 import discord
+import os
+import json
 from math import *
 from pickle import *
 
@@ -67,6 +69,8 @@ willOverBought = -10
 TpPct = 0.1
 messagesSell = ""
 messagesBuy = ""
+CUR_DIR = os.path.dirname(__file__)
+DATA_PATH = os.path.join(CUR_DIR, "data.json")
 
 dfList = {}
 for pair in pairList:
@@ -137,7 +141,8 @@ def sellConditionTrix(row, previousRow):
         return True
     else:
         return False
-    
+
+# -- Check balance and DATA -- 
 coinBalance = ftx.get_all_balance()
 coinInUsd = ftx.get_all_balance_in_usd()
 usdBalance = coinBalance['USD']
@@ -150,6 +155,13 @@ for coin in coinInUsd:
         coinPositionList.append(coin)
 openPositions = len(coinPositionList)
 
+if os.path.exists(DATA_PATH):
+    with open(DATA_PATH, "r") as f:
+        DATA = json.load(f)
+
+else:
+    DATA = []
+
 #Sell
 for coin in coinPositionList:
         if (sellCondition(dfList[coin].iloc[-2], dfList[coin].iloc[-3]) == True
@@ -158,21 +170,25 @@ for coin in coinPositionList:
             symbol = coin+'/USD'
             cancel = ftx.cancel_all_open_order(symbol)
             time.sleep(1)
-            buyPrice = float(ftx.convert_price_to_precision(symbol, ftx.get_bid_ask_price(symbol)['ask'])) 
+            actualPrice = float(ftx.convert_price_to_precision(symbol, ftx.get_bid_ask_price(symbol)['ask'])) 
             sell = ftx.place_market_order(symbol,'sell',coinBalance[coin])
             print(cancel)
             print("Sell", coinBalance[coin], coin, sell)
 
-            f = open ("a", "rb")
-            Price = load (f)
-            f.close()
-            profit = ((buyPrice - Price)/Price) * 100
+            if symbol in DATA:
+                index = DATA.index(symbol)
+                price = DATA(index + 1)
+
+                profit = ((actualPrice - price)/price) * 100
+
+                DATA.remove(index)
+                DATA.remove(index + 1)
 
             if profit > 0:
-                messagesSell = "Sell " + str(coin) + "at " + str(buyPrice) + "$. " + " --> " + " +" + str(profit) + "%"
+                messagesSell = "Sell " + str(coin) + "at " + str(actualPrice) + "$. " + " --> " + " +" + str(profit) + "%"
 
             else :
-                messagesSell = "Sell " + str(coin) + "at " + str(buyPrice) + "$. " + " --> " + str(profit) + "%"
+                messagesSell = "Sell " + str(coin) + "at " + str(actualPrice) + "$. " + " --> " + str(profit) + "%"
         else:
             print("Keep",coin)
 
@@ -207,10 +223,8 @@ if openPositions < maxOpenPosition:
                     tp = ftx.place_limit_order(symbol,'sell',buyAmount,tpPrice)
                     pass
                 
-                f = open("a", "wb")
-                Price = buyPrice
-                dump (Price, f)
-                f.close()
+                DATA.append(symbol)
+                DATA.append(buyPrice)
 
                 messagesBuy = "Buy " + str(coin) + "at " + str(buyPrice) + "$"
 
@@ -218,7 +232,12 @@ if openPositions < maxOpenPosition:
                 print("Place",buyAmount,coin,"TP at",tpPrice, tp)
 
                 openPositions += 1
+                
+                # Write new position in json file
+                with open(DATA_PATH, "w") as f:
+                    json.dump(DATA, f, indent=4)
 
+# -- Message Bot --
 if messagesSell != "" or messagesBuy != "":
     TOKEN = ""
     client = discord.Client()
