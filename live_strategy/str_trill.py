@@ -67,8 +67,8 @@ stochOverSold = 0.2
 willOverSold = -85
 willOverBought = -10
 TpPct = 0.1
-messagesSell = ""
-messagesBuy = ""
+messages = ""
+
 CUR_DIR = os.path.dirname(__file__)
 DATA_PATH = os.path.join(CUR_DIR, "data.json")
 
@@ -86,8 +86,8 @@ for coin in dfList:
     dfList[coin]['AO']= ta.momentum.awesome_oscillator(dfList[coin]['high'],dfList[coin]['low'],window1=aoParam1,window2=aoParam2)
     dfList[coin]['STOCH_RSI'] = ta.momentum.stochrsi(close=dfList[coin]['close'], window=stochWindow)
     dfList[coin]['WillR'] = ta.momentum.williams_r(high=dfList[coin]['high'], low=dfList[coin]['low'], close=dfList[coin]['close'], lbp=willWindow)
-    dfList[coin]['EMA25'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=25)
-    dfList[coin]['EMA75'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=75)
+    dfList[coin]['EMA100'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=100)
+    dfList[coin]['EMA200'] =ta.trend.ema_indicator(close=dfList[coin]['close'], window=200)
 
     trix = ci.trix(close=dfList[coin]['close'],trixLength=trixWindow, trixSignal=trixSignal)
     dfList[coin]['TRIX_HISTO'] = trix.trix_histo()
@@ -96,6 +96,7 @@ for coin in dfList:
     dfList[coin]['MACD'] = MACD.macd()
     dfList[coin]['MACD_SIGNAL'] = MACD.macd_signal()
     dfList[coin]['MACD_DIFF'] = MACD.macd_diff()
+
 print("Data and Indicators loaded 100%")
 
 # -- Condition to BUY market --
@@ -114,7 +115,7 @@ def buyConditionTrix(row, previousRow):
     if(
         row['TRIX_HISTO'] > 0
         and row['STOCH_RSI'] < stochOverBought
-        and row['EMA25'] > row['EMA75']
+        and row['EMA100'] > row['EMA200']
         and row['MACD'] > 0
     ):
         return True
@@ -185,10 +186,27 @@ for coin in coinPositionList:
                 DATA.remove(index + 1)
 
             if profit > 0:
-                messagesSell = "Sell " + str(coin) + "at " + str(actualPrice) + "$. " + " --> " + " +" + str(profit) + "%"
+                messages = "Sell " + str(coin) + "at " + str(actualPrice) + "$. " + " --> " + " +" + str(profit) + "%"
 
             else :
-                messagesSell = "Sell " + str(coin) + "at " + str(actualPrice) + "$. " + " --> " + str(profit) + "%"
+                messages = "Sell " + str(coin) + "at " + str(actualPrice) + "$. " + " --> " + str(profit) + "%"
+
+            if messages != "":
+                    TOKEN = ""
+                    client = discord.Client()
+                    @client.event
+                    async def on_ready():
+                        print(f'{client.user} has connected to Discord!')
+
+
+                        channel = client.get_channel()
+                        await channel.send(messages)
+
+                        await client.close()
+                        time.sleep(1)
+
+                    client.run(TOKEN)
+
         else:
             print("Keep",coin)
 
@@ -226,7 +244,22 @@ if openPositions < maxOpenPosition:
                 DATA.append(symbol)
                 DATA.append(buyPrice)
 
-                messagesBuy = "Buy " + str(coin) + "at " + str(buyPrice) + "$"
+                messages = "Buy " + str(coin) + "at " + str(buyPrice) + "$"
+
+                if messages != "":
+                    TOKEN = ""
+                    client = discord.Client()
+                    @client.event
+                    async def on_ready():
+                        print(f'{client.user} has connected to Discord!')
+
+                        channel = client.get_channel()
+                        await channel.send(messages)
+
+                        await client.close()
+                        time.sleep(1)
+
+                    client.run(TOKEN)
 
                 print("Buy",buyAmount,coin,'at',buyPrice,buy)
                 print("Place",buyAmount,coin,"TP at",tpPrice, tp)
@@ -236,28 +269,3 @@ if openPositions < maxOpenPosition:
                 # Write new position in json file
                 with open(DATA_PATH, "w") as f:
                     json.dump(DATA, f, indent=4)
-
-# -- Message Bot --
-if messagesSell != "" or messagesBuy != "":
-    TOKEN = ""
-    client = discord.Client()
-    @client.event
-    async def on_ready():
-        print(f'{client.user} has connected to Discord!')
-
-        if messagesSell != "":
-            channel = client.get_channel()
-            await channel.send(messagesSell)
-
-        if messagesBuy != "":
-            channel = client.get_channel()
-            await channel.send(messagesBuy)
-
-        await client.close()
-        time.sleep(1)
-
-
-    client.run(TOKEN)
-
-else:
-    print("No messages to send")
