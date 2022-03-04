@@ -186,10 +186,10 @@ for coin in coinPositionList:
                 DATA.remove(index + 1)
 
             if profit > 0:
-                messages = "Sell " + str(coin) + "at " + str(actualPrice) + "$. " + " --> " + " +" + str(profit) + "%"
+                messages = "Sell " + str(coin) + " at " + str(actualPrice) + "$. " + " --> " + " +" + str(profit) + "%"
 
             else :
-                messages = "Sell " + str(coin) + "at " + str(actualPrice) + "$. " + " --> " + str(profit) + "%"
+                messages = "Sell " + str(coin) + " at " + str(actualPrice) + "$. " + " --> " + str(profit) + "%"
 
             if messages != "":
                     TOKEN = ""
@@ -244,7 +244,7 @@ if openPositions < maxOpenPosition:
                 DATA.append(symbol)
                 DATA.append(buyPrice)
 
-                messages = "Buy " + str(coin) + "at " + str(buyPrice) + "$"
+                messages = "Buy " + str(coin) + " at " + str(buyPrice) + "$"
 
                 if messages != "":
                     TOKEN = ""
