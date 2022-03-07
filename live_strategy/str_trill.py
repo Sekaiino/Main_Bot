@@ -168,7 +168,7 @@ for coin in coinPositionList:
         if (sellCondition(dfList[coin].iloc[-2], dfList[coin].iloc[-3]) == True
             or sellConditionTrix(dfList[coin].iloc[-2], dfList[coin].iloc[-3]) == True):
             openPositions -= 1
-            symbol = coin+'/USD'
+            symbol = coin+"/USD"
             cancel = ftx.cancel_all_open_order(symbol)
             time.sleep(1)
             actualPrice = float(ftx.convert_price_to_precision(symbol, ftx.get_bid_ask_price(symbol)['ask'])) 
